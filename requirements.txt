@@ -1,0 +1,3 @@
+# No Python dependencies are required for the current Node.js scaffold.
+# This file is included to satisfy setup/documentation expectations and can be
+# populated later if a Python backend or tooling is added.
