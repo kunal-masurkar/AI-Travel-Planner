@@ -22,13 +22,14 @@ export const tripLocationSchema = z.object({
   name: z.string(),
   lat: z.number(),
   lon: z.number(),
+  address: z.string().optional(),
 });
 
 export const tripActivitySchema = z.object({
   time: z.string(),
   title: z.string(),
   category: activityCategorySchema,
-  estCostUsd: z.number().nonnegative(),
+  estCostInr: z.number().nonnegative(),
   notes: z.string().optional(),
   location: tripLocationSchema.optional(),
 });
@@ -41,16 +42,21 @@ export const tripDaySchema = z.object({
   activities: z.array(tripActivitySchema),
 });
 
-export const generateTripRequestSchema = z.object({
-  destination: z.string().min(2),
-  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  budgetUsd: z.number().positive(),
-  interests: z.array(z.string().min(1)).min(1),
-  pace: travelPaceSchema,
-  travelers: z.number().int().positive().default(1),
-  notes: z.string().optional(),
-});
+export const generateTripRequestSchema = z
+  .object({
+    destination: z.string().min(2),
+    startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    budgetInr: z.number().positive(),
+    interests: z.array(z.string().min(1)).min(1),
+    pace: travelPaceSchema,
+    travelers: z.number().int().positive().default(1),
+    notes: z.string().optional(),
+  })
+  .refine((data) => data.endDate >= data.startDate, {
+    message: "End date must be on or after start date.",
+    path: ["endDate"],
+  });
 
 export const itinerarySchema = z.object({
   tripId: z.string(),
@@ -58,7 +64,7 @@ export const itinerarySchema = z.object({
   destination: z.string(),
   startDate: z.string(),
   endDate: z.string(),
-  budgetEstimateUsd: z.number().nonnegative(),
+  budgetEstimateInr: z.number().nonnegative(),
   generatedAt: z.string(),
   summary: z.string(),
   days: z.array(tripDaySchema),
@@ -66,7 +72,7 @@ export const itinerarySchema = z.object({
 
 export const generateTripResponseSchema = z.object({
   itinerary: itinerarySchema,
-  source: z.literal("local-demo"),
+  source: z.enum(["local-demo", "live-hybrid"]),
 });
 
 export type TravelPace = z.infer<typeof travelPaceSchema>;

@@ -1,5 +1,5 @@
 {
-  "name": "ai-travel-planner",
+  "name": "india-travel-planner",
   "private": true,
   "version": "0.1.0",
   "workspaces": [
@@ -7,8 +7,9 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "concurrently -k \"npm run dev --workspace @ai-travel-planner/api\" \"npm run dev --workspace @ai-travel-planner/web\"",
-    "build": "npm run build --workspaces --if-present",
+    "dev": "npm run build --workspace @ai-travel-planner/shared && npm run build --workspace @ai-travel-planner/api && concurrently -k \"node apps/api/dist/server.js\" \"node scripts/serve-web-source.mjs\"",
+    "build": "npm run build --workspace @ai-travel-planner/shared && npm run build --workspace @ai-travel-planner/api",
+    "start": "concurrently -k \"node apps/api/dist/server.js\" \"node scripts/serve-web-source.mjs\"",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "clean": "npm run clean --workspaces --if-present"
   },

@@ -7,7 +7,7 @@ import {
 } from "@ai-travel-planner/shared";
 import { getProviderConfig } from "./config/providers.js";
 import { validateRuntimeEnv } from "./config/runtimeEnv.js";
-import { buildDemoItinerary } from "./services/buildDemoItinerary.js";
+import { buildTripItinerary } from "./services/buildTripItinerary.js";
 
 dotenv.config();
 
@@ -35,7 +35,7 @@ app.get("/health", (_request, response) => {
   });
 });
 
-app.post("/api/itineraries/generate", (request, response) => {
+app.post("/api/itineraries/generate", async (request, response) => {
   const parsedRequest = generateTripRequestSchema.safeParse(request.body);
 
   if (!parsedRequest.success) {
@@ -45,10 +45,10 @@ app.post("/api/itineraries/generate", (request, response) => {
     });
   }
 
-  const itinerary = buildDemoItinerary(parsedRequest.data);
+  const itinerary = await buildTripItinerary(parsedRequest.data);
   const payload = generateTripResponseSchema.parse({
     itinerary,
-    source: "local-demo",
+    source: process.env.GEOAPIFY_API_KEY?.trim() ? "live-hybrid" : "local-demo",
   });
 
   return response.json(payload);

@@ -4,10 +4,156 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0f172a" />
-    <title>AI Travel Planner</title>
+    <title>India Travel Planner</title>
+    <link rel="stylesheet" href="/style.css" />
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <div class="app-shell">
+      <div class="backdrop backdrop-a"></div>
+      <div class="backdrop backdrop-b"></div>
+
+      <main class="page">
+        <section class="hero panel">
+          <div class="hero-copy">
+            <span class="eyebrow">India Travel Planner</span>
+            <h1>Plan trips across India with structure, not guesswork.</h1>
+            <p>
+              This showcase is focused on Indian destinations only, with a built API, a static interactive frontend, and the data contract needed for future AI orchestration.
+            </p>
+
+            <div class="hero-pills">
+              <span>India-only destinations</span>
+              <span>Node API</span>
+              <span>Static frontend</span>
+              <span>Geoapify-ready</span>
+            </div>
+          </div>
+
+          <div class="hero-card">
+            <div class="stat">
+              <strong>1</strong>
+              <span>services running locally</span>
+            </div>
+            <div class="stat">
+              <strong>1</strong>
+              <span>shared itinerary contract</span>
+            </div>
+            <div class="stat">
+              <strong>0</strong>
+              <span>build-tool dependency for the UI</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="layout">
+          <form class="panel form-panel" id="trip-form">
+            <div class="section-heading">
+              <span>Trip brief</span>
+              <p>Choose an Indian destination and preferences to generate a starter itinerary.</p>
+            </div>
+
+            <label>
+              Destination
+              <input
+                name="destination"
+                list="india-destinations"
+                value="Goa"
+                placeholder="Type an Indian city or state"
+                autocomplete="off"
+              />
+            </label>
+            <datalist id="india-destinations">
+              <option value="Delhi"></option>
+              <option value="Mumbai"></option>
+              <option value="Jaipur"></option>
+              <option value="Goa"></option>
+              <option value="Udaipur"></option>
+              <option value="Kerala"></option>
+              <option value="Varanasi"></option>
+              <option value="Kolkata"></option>
+              <option value="Himachal Pradesh"></option>
+            </datalist>
+            <p class="field-hint">Start typing to choose an Indian destination. You can also enter another Indian city manually.</p>
+
+            <div class="grid-2">
+              <label>
+                Start date
+                <input type="date" name="startDate" value="2026-11-10" />
+              </label>
+              <label>
+                End date
+                <input type="date" name="endDate" value="2026-11-14" />
+              </label>
+            </div>
+
+            <div class="grid-2">
+              <label>
+                Budget INR
+                <input type="number" name="budgetInr" min="1" value="25000" />
+              </label>
+              <label>
+                Travelers
+                <input type="number" name="travelers" min="1" value="1" />
+              </label>
+            </div>
+
+            <label>
+              Interests
+              <input name="interests" value="food, forts, beaches" placeholder="food, forts, beaches" />
+            </label>
+
+            <label>
+              Pace
+              <select name="pace">
+                <option value="relaxed">Relaxed</option>
+                <option value="balanced" selected>Balanced</option>
+                <option value="packed">Packed</option>
+              </select>
+            </label>
+
+            <label>
+              Notes
+              <textarea rows="4" name="notes" placeholder="Anything the planner should respect">Prefer a comfortable pace with one flexible evening in India.</textarea>
+            </label>
+
+            <div id="error" class="alert" hidden></div>
+
+            <button class="primary-button" type="submit">Generate itinerary</button>
+          </form>
+
+          <section class="result-column">
+            <div class="panel map-panel">
+              <div class="section-heading">
+                <span>Route preview</span>
+                <p>This is not a real map yet. It is a dynamic preview that updates after itinerary generation.</p>
+              </div>
+              <div class="map-stage">
+                <div class="map-grid"></div>
+                <div class="map-label">
+                  <strong id="map-destination-title">Goa route preview</strong>
+                  <span id="map-destination-summary">Generate an itinerary to see the route summary here.</span>
+                </div>
+                <div class="map-route" id="map-route-list"></div>
+              </div>
+            </div>
+
+            <div class="panel itinerary-panel">
+              <div class="section-heading">
+                <span>Generated itinerary</span>
+                  <p>The API response is validated before it reaches the UI and shown in INR.</p>
+              </div>
+
+              <div id="itinerary" class="empty-state">
+                <h2>Your itinerary will appear here.</h2>
+                <p>Try Goa to see the full data flow from form to API to UI.</p>
+              </div>
+            </div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="/app.js"></script>
   </body>
 </html>
+

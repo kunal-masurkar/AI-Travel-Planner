@@ -5,9 +5,16 @@ import {
 } from "@ai-travel-planner/shared";
 
 const destinationHighlights: Record<string, string[]> = {
-  japan: ["Temple morning walk", "Ramen lunch stop", "Night street food crawl"],
-  paris: ["Museum opening hour", "Cafes and pastry stops", "Seine evening stroll"],
-  london: ["Historic district walk", "Market lunch", "Riverfront sunset"],
+  delhi: ["Red Fort sunrise walk", "Old Delhi food trail", "India Gate evening stroll"],
+  mumbai: ["Marine Drive morning walk", "Street food lunch", "Gateway of India sunset"],
+  jaipur: ["Amber Fort sunrise", "City Palace visit", "Pink City bazaar evening"],
+  goa: ["Beach sunrise walk", "Seafood lunch stop", "Mandovi river sunset"],
+  udaipur: ["Lake Pichola morning walk", "City Palace visit", "Sunset at Fateh Sagar"],
+  kerala: ["Backwaters morning cruise", "Local lunch stop", "Kathakali evening"],
+  varanasi: ["Ghats at sunrise", "Banaras lunch break", "Ganga aarti evening"],
+  kolkata: ["Heritage tram ride", "Misti lunch stop", "Riverside evening"],
+  himachal: ["Mountain morning view", "Cafe lunch stop", "Hill town sunset"],
+  india: ["Local landmark walk", "Regional food stop", "Cultural evening"],
 };
 
 function differenceInDays(startDate: string, endDate: string) {
@@ -16,14 +23,10 @@ function differenceInDays(startDate: string, endDate: string) {
   return Math.max(1, Math.round((end.getTime() - start.getTime()) / 86_400_000) + 1);
 }
 
-function formatDate(date: Date) {
-  return date.toISOString().slice(0, 10);
-}
-
 function advanceDate(startDate: string, offsetDays: number) {
   const date = new Date(`${startDate}T00:00:00Z`);
   date.setUTCDate(date.getUTCDate() + offsetDays);
-  return formatDate(date);
+  return date.toISOString().slice(0, 10);
 }
 
 function pickTheme(destination: string, interests: string[], dayNumber: number) {
@@ -45,20 +48,20 @@ function buildActivities(destination: string, interests: string[], dayNumber: nu
       time: "09:00",
       title: `${baseTitle} signature ${interest} stop`,
       category: "sightseeing" as const,
-      estCostUsd: Math.round(dailySpending * 0.2),
-      notes: "Replace this placeholder with a live place lookup when APIs are connected.",
+      estCostInr: Math.round(dailySpending * 0.2),
+      notes: "Replace this placeholder with a live Indian place lookup when APIs are connected.",
     },
     {
       time: "13:00",
       title: `${interest} lunch and cafe break`,
       category: "food" as const,
-      estCostUsd: Math.round(dailySpending * 0.25),
+      estCostInr: Math.round(dailySpending * 0.25),
     },
     {
       time: "18:30",
       title: `${baseTitle} evening walk`,
       category: "evening" as const,
-      estCostUsd: Math.round(dailySpending * 0.15),
+      estCostInr: Math.round(dailySpending * 0.15),
     },
   ];
 }
@@ -66,15 +69,16 @@ function buildActivities(destination: string, interests: string[], dayNumber: nu
 function buildWeather(dayNumber: number) {
   return {
     condition: dayNumber % 2 === 0 ? "Clear" : "Mild",
-    tempHighC: 22 + (dayNumber % 3),
-    tempLowC: 14 + (dayNumber % 2),
+    tempHighC: 28 + (dayNumber % 4),
+    tempLowC: 18 + (dayNumber % 3),
   };
 }
 
 export function buildDemoItinerary(preferences: TravelPreferences) {
   const dayCount = differenceInDays(preferences.startDate, preferences.endDate);
-  const budgetPerDay = preferences.budgetUsd / dayCount;
+  const budgetPerDay = preferences.budgetInr / dayCount;
   const startDate = new Date(`${preferences.startDate}T00:00:00Z`);
+  const destinationLabel = preferences.destination.split(",")[0]?.trim() || preferences.destination;
 
   const days: TripDay[] = Array.from({ length: dayCount }, (_unused, index) => {
     const dayNumber = index + 1;
@@ -89,13 +93,13 @@ export function buildDemoItinerary(preferences: TravelPreferences) {
 
   return itinerarySchema.parse({
     tripId: `${preferences.destination.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${startDate.getTime()}`,
-    tripTitle: `${dayCount}-Day ${preferences.destination} Trip`,
+    tripTitle: `${dayCount}-Day ${destinationLabel} Trip`,
     destination: preferences.destination,
     startDate: preferences.startDate,
     endDate: preferences.endDate,
-    budgetEstimateUsd: Math.round(preferences.budgetUsd),
+    budgetEstimateInr: Math.round(preferences.budgetInr),
     generatedAt: new Date().toISOString(),
-    summary: `A ${preferences.pace} itinerary built around ${preferences.interests.join(", ")}.`,
+    summary: `A ${preferences.pace} itinerary across India built around ${preferences.interests.join(", ")}.`,
     days,
   });
 }
