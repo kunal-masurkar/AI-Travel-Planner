@@ -3,157 +3,66 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0f172a" />
-    <title>India Travel Planner</title>
+    <meta name="theme-color" content="#0b1329" />
+    <meta name="description" content="Plan trips across India: compare 3–7 day itineraries, estimate costs, discover places, food and stays, and save your plans." />
+    <title>YatraAI — India Travel Planner</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <link rel="stylesheet" href="/style.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
   </head>
   <body>
+    <a class="skip-link" href="#view">Skip to content</a>
     <div class="app-shell">
-      <div class="backdrop backdrop-a"></div>
-      <div class="backdrop backdrop-b"></div>
+      <div class="ambient-glow glow-amber" aria-hidden="true"></div>
+      <div class="ambient-glow glow-emerald" aria-hidden="true"></div>
+      <div class="ambient-glow glow-indigo" aria-hidden="true"></div>
 
-      <main class="page">
-        <section class="hero panel">
-          <div class="hero-copy">
-            <span class="eyebrow">India Travel Planner</span>
-            <h1>Plan trips across India with structure, not guesswork.</h1>
-            <p>
-              This showcase is focused on Indian destinations only, with a built API, a static interactive frontend, and the data contract needed for future AI orchestration.
-            </p>
-
-            <div class="hero-pills">
-              <span>India-only destinations</span>
-              <span>Node API</span>
-              <span>Static frontend</span>
-              <span>Geoapify-ready</span>
+      <header class="top-nav">
+        <div class="nav-container">
+          <a class="brand" href="#/" aria-label="YatraAI home">
+            <div class="brand-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
             </div>
-          </div>
-
-          <div class="hero-card">
-            <div class="stat">
-              <strong>1</strong>
-              <span>services running locally</span>
+            <div class="brand-text">
+              <span class="brand-name">Yatra<span>AI</span></span>
+              <span class="brand-tagline">India Travel Studio</span>
             </div>
-            <div class="stat">
-              <strong>1</strong>
-              <span>shared itinerary contract</span>
-            </div>
-            <div class="stat">
-              <strong>0</strong>
-              <span>build-tool dependency for the UI</span>
-            </div>
-          </div>
-        </section>
+          </a>
 
-        <section class="layout">
-          <form class="panel form-panel" id="trip-form">
-            <div class="section-heading">
-              <span>Trip brief</span>
-              <p>Choose an Indian destination and preferences to generate a starter itinerary.</p>
-            </div>
+          <nav class="main-nav" aria-label="Main">
+            <a href="#/" data-nav="home">Explore</a>
+            <a href="#/plan" data-nav="plan">Plan a trip</a>
+            <a href="#/trips" data-nav="trips">My trips</a>
+          </nav>
 
-            <label>
-              Destination
-              <input
-                name="destination"
-                list="india-destinations"
-                value="Goa"
-                placeholder="Type an Indian city or state"
-                autocomplete="off"
-              />
-            </label>
-            <datalist id="india-destinations">
-              <option value="Delhi"></option>
-              <option value="Mumbai"></option>
-              <option value="Jaipur"></option>
-              <option value="Goa"></option>
-              <option value="Udaipur"></option>
-              <option value="Kerala"></option>
-              <option value="Varanasi"></option>
-              <option value="Kolkata"></option>
-              <option value="Himachal Pradesh"></option>
-            </datalist>
-            <p class="field-hint">Start typing to choose an Indian destination. You can also enter another Indian city manually.</p>
+          <div class="nav-actions" id="account-area"></div>
+        </div>
+      </header>
 
-            <div class="grid-2">
-              <label>
-                Start date
-                <input type="date" name="startDate" value="2026-11-10" />
-              </label>
-              <label>
-                End date
-                <input type="date" name="endDate" value="2026-11-14" />
-              </label>
-            </div>
-
-            <div class="grid-2">
-              <label>
-                Budget INR
-                <input type="number" name="budgetInr" min="1" value="25000" />
-              </label>
-              <label>
-                Travelers
-                <input type="number" name="travelers" min="1" value="1" />
-              </label>
-            </div>
-
-            <label>
-              Interests
-              <input name="interests" value="food, forts, beaches" placeholder="food, forts, beaches" />
-            </label>
-
-            <label>
-              Pace
-              <select name="pace">
-                <option value="relaxed">Relaxed</option>
-                <option value="balanced" selected>Balanced</option>
-                <option value="packed">Packed</option>
-              </select>
-            </label>
-
-            <label>
-              Notes
-              <textarea rows="4" name="notes" placeholder="Anything the planner should respect">Prefer a comfortable pace with one flexible evening in India.</textarea>
-            </label>
-
-            <div id="error" class="alert" hidden></div>
-
-            <button class="primary-button" type="submit">Generate itinerary</button>
-          </form>
-
-          <section class="result-column">
-            <div class="panel map-panel">
-              <div class="section-heading">
-                <span>Route preview</span>
-                <p>This is not a real map yet. It is a dynamic preview that updates after itinerary generation.</p>
-              </div>
-              <div class="map-stage">
-                <div class="map-grid"></div>
-                <div class="map-label">
-                  <strong id="map-destination-title">Goa route preview</strong>
-                  <span id="map-destination-summary">Generate an itinerary to see the route summary here.</span>
-                </div>
-                <div class="map-route" id="map-route-list"></div>
-              </div>
-            </div>
-
-            <div class="panel itinerary-panel">
-              <div class="section-heading">
-                <span>Generated itinerary</span>
-                  <p>The API response is validated before it reaches the UI and shown in INR.</p>
-              </div>
-
-              <div id="itinerary" class="empty-state">
-                <h2>Your itinerary will appear here.</h2>
-                <p>Try Goa to see the full data flow from form to API to UI.</p>
-              </div>
-            </div>
-          </section>
-        </section>
+      <main class="page" id="view" tabindex="-1">
+        <div class="page-loading">Loading…</div>
       </main>
+
+      <footer class="site-footer">
+        <p>Prices, ratings and opening hours are indicative — always confirm before you book. Map data © OpenStreetMap contributors · Images from Wikipedia.</p>
+      </footer>
+
+      <div id="loader-overlay" class="loader-overlay" hidden>
+        <div class="loader-modal" role="status" aria-live="polite">
+          <div class="loader-spinner-ring"><div class="inner-pulse"></div></div>
+          <h3 id="loader-title">Crafting your itinerary</h3>
+          <p id="loader-step-text"></p>
+          <div class="loader-progress-bar"><div class="loader-progress-fill" id="loader-progress-fill"></div></div>
+        </div>
+      </div>
+
+      <div id="auth-overlay" class="modal-overlay" hidden></div>
+      <div id="toast-host" class="toast-host" aria-live="polite"></div>
     </div>
 
     <script type="module" src="/app.js"></script>
   </body>
 </html>
-

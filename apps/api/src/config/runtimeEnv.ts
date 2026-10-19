@@ -21,12 +21,12 @@ export function validateRuntimeEnv(): RuntimeEnvStatus {
     warnings.push("GEOAPIFY_API_KEY is missing while ROUTING_PROVIDER is set to geoapify.");
   }
 
-  if (!process.env.SUPABASE_URL?.trim()) {
-    warnings.push("SUPABASE_URL is missing; database features will stay disabled.");
+  if (!process.env.GOOGLE_CLIENT_ID?.trim()) {
+    warnings.push("GOOGLE_CLIENT_ID is missing; Google sign-in is hidden (email/password accounts still work).");
   }
 
-  if (!process.env.SUPABASE_ANON_KEY?.trim()) {
-    warnings.push("SUPABASE_ANON_KEY is missing; database features will stay disabled.");
+  if (!process.env.RESEND_API_KEY?.trim()) {
+    warnings.push("RESEND_API_KEY is missing; transactional emails (welcome & password reset) are disabled.");
   }
 
   return {

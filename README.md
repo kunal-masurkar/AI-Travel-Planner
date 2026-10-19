@@ -58,62 +58,44 @@ This project runs with Node.js and npm.
 - `npm run typecheck` - run TypeScript checks across the workspace
 - `npm run clean` - remove generated build output where supported
 
+## Features
+
+- **Explore destinations** — curated guides for Goa, Jaipur, Kerala, Udaipur, Varanasi, Himachal (Shimla/Manali), Delhi, Mumbai and Agra: attractions (hours, entry fees, visit duration, best time of day, hidden gems), restaurants, hotels in three tiers, must-try dishes, month-by-month season guide, festivals and travel considerations, plus an interactive map.
+- **Itineraries for any length** — 3/4/5/7-day comparisons (or 1–14 days) built day by day: places grouped geographically, realistic timings with travel legs, lunch/dinner near your route, hotels near your stops, multi-base routing for regions like Kerala and Himachal, weekly closures avoided, and nearby alternatives (indoor options on rainy days).
+- **Cost estimates** — accommodation, food, local transport, entry tickets, activities and misc., per person and for the group, across budget / mid-range / premium styles, compared against your budget.
+- **Customise** — remove, reorder or add stops, swap restaurants, change hotels, travellers, dates, duration, style or pace, or regenerate; costs and routes update instantly.
+- **Accounts** — sign up / log in with email + password (scrypt-hashed), optional Google sign-in, logout. Signed-in plans are saved automatically; the dashboard lists upcoming and past trips with view, rename, notes, duplicate and delete.
+- **Maps** — Leaflet + OpenStreetMap with per-day routes, and "open in Google Maps" directions for each day.
+- Other Indian destinations work too: with `GEOAPIFY_API_KEY` set, places, restaurants and stays come from live data; otherwise a generic outline is produced.
+
 ## Environment
 
 The API reads these variables from [`.env`](.env):
 
 - `PORT` - API port, default `8787`
 - `WEB_PORT` - frontend port, default `5173`
-- `GEMINI_API_KEY` - reserved for the AI layer
-- `GEOAPIFY_API_KEY` - used for places and routing
-- `PLACES_PROVIDER` - currently `geoapify`
-- `ROUTING_PROVIDER` - currently `geoapify`
-- `GEOCODING_PROVIDER` - `nominatim` by default
-- `SUPABASE_URL` - Supabase project URL
-- `SUPABASE_ANON_KEY` - Supabase anon key
+- `GEOAPIFY_API_KEY` - live places for destinations outside the curated catalog
+- `GEOCODING_PROVIDER` - `nominatim` by default (no key needed)
+- `GOOGLE_CLIENT_ID` - optional; enables "Continue with Google" (add your site origin, e.g. `http://localhost:5173`, to the OAuth client's authorised JavaScript origins)
+- `DATA_DIR` - optional; folder for the JSON database of users, sessions and saved trips (default `apps/api/data`, git-ignored)
+- `GEMINI_API_KEY` - reserved for a future AI layer
 
-## Status
-
-The project includes a working demo itinerary generator for Indian destinations, a polished landing page, and the API contract needed for future integrations with live place and weather services.
-
-## Planned provider integrations
-
-- Places and routing: Geoapify
-- Geocoding: Nominatim by default, or Geoapify later
-- Weather: Open-Meteo
-- LLM: Gemini
-
-## What I need from you
-
-- Trip destination in India
-- Start date and end date
-- Budget in INR
-- Interests like food, beaches, forts, culture
-- Pace: relaxed, balanced, or packed
-- Travelers count
-- Optional notes
-
-## Live keys
-
-- `GEOAPIFY_API_KEY` - needed for live place search and live route data
-- `GEMINI_API_KEY` - needed only when AI planning is added
-- `SUPABASE_URL` and `SUPABASE_ANON_KEY` - needed only when saving trips
-- `GEOCODING_PROVIDER=nominatim` - no key needed
-- `OPEN-METEO` - no key needed
-
-## Runtime env checks
-
-The API validates its startup environment and prints warnings for missing keys like `GEOAPIFY_API_KEY`, `GEMINI_API_KEY`, and the Supabase settings. The `/health` endpoint also returns a safe summary of the env status.
+Weather comes from Open-Meteo (no key): live forecasts within ~2 weeks of travel, otherwise the same dates last year as a typical-weather guide, falling back to seasonal averages.
 
 ## API endpoints
 
-- `GET /health` - returns API status, selected providers, and environment warnings
-- `POST /api/itineraries/generate` - returns a demo itinerary based on the submitted trip brief
+- `GET /health` - API status, providers and environment warnings
+- `GET /api/config` - public client config (Google client ID, live-places flag)
+- `GET /api/destinations` / `GET /api/destinations/:key?travelers=&startDate=` - destination summaries and full guides with 3/4/5/7-day cost estimates per travel style
+- `POST /api/itineraries/generate` - build an itinerary (auto-saved for signed-in users unless `?save=false`)
+- `POST /api/itineraries/customize` - apply one edit (`remove`, `move`, `add`, `swapMeal`, `setHotel`, `setTravelers`, `setStartDate`) and get the recalculated itinerary
+- `POST /api/auth/signup`, `POST /api/auth/login`, `POST /api/auth/google`, `POST /api/auth/logout`, `GET /api/auth/me`, `POST /api/auth/me/recent`
+- `GET/POST /api/trips`, `GET/PUT/DELETE /api/trips/:id`, `POST /api/trips/:id/duplicate` - saved trips (Bearer token required)
 
-Trip brief fields use INR (`budgetInr`) and are validated on both client and server.
+Requests and responses are validated with the shared Zod schemas in [packages/shared](packages/shared).
 
 ## Notes
 
-- The UI is India-focused: destinations, copy, and currency are tuned for Indian travel.
+- Prices, ratings and opening hours in the catalog are indicative — confirm before booking.
 - The dev web server proxies `/api` and `/health` to the API so the frontend can use same-origin requests.
-- The current generator is a demo implementation that is ready to be replaced with live AI and API orchestration.
+- Accounts and trips are stored in a local JSON file, suitable for a single server. Swap [apps/api/src/store/db.ts](apps/api/src/store/db.ts) for a real database before deploying at scale.

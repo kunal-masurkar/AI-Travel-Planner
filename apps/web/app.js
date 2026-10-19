@@ -1,188 +1,117 @@
-const form = document.getElementById("trip-form");
-const itinerary = document.getElementById("itinerary");
-const errorBox = document.getElementById("error");
-const submitButton = form.querySelector('button[type="submit"]');
-const mapDestinationTitle = document.getElementById("map-destination-title");
-const mapDestinationSummary = document.getElementById("map-destination-summary");
-const mapRouteList = document.getElementById("map-route-list");
-const rupeeFormatter = new Intl.NumberFormat("en-IN", {
-  maximumFractionDigits: 0,
-});
+// YatraAI — India Travel Planner: hash router and app shell.
 
-function escapeHtml(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
+import { bootstrap, logout, onStateChange, state } from "./js/state.js";
+import { escapeHtml, toast } from "./js/ui.js";
+import { initAuthModal, openAuthModal } from "./js/views/auth.js";
+import { renderDashboard, renderSavedTrip } from "./js/views/dashboard.js";
+import { renderDestination } from "./js/views/destination.js";
+import { renderHome } from "./js/views/home.js";
+import { renderPlan } from "./js/views/plan.js";
+
+const viewHost = document.getElementById("view");
+let cleanup = null;
+let renderToken = 0;
+
+const routes = [
+  { pattern: /^\/?$/, nav: "home", render: (root) => renderHome(root) },
+  { pattern: /^\/destination\/([\w-]+)$/, nav: "home", render: (root, match) => renderDestination(root, { key: match[1] }) },
+  { pattern: /^\/plan$/, nav: "plan", render: (root, _match, params) => renderPlan(root, params) },
+  { pattern: /^\/trips$/, nav: "trips", render: (root) => renderDashboard(root) },
+  { pattern: /^\/trip\/([\w-]+)$/, nav: "trips", render: (root, match) => renderSavedTrip(root, { id: match[1] }) },
+];
+
+function parseHash() {
+  const raw = location.hash.replace(/^#/, "") || "/";
+  const [path, query = ""] = raw.split("?");
+  return { path, params: new URLSearchParams(query) };
 }
 
-function showError(message) {
-  errorBox.textContent = message;
-  errorBox.hidden = !message;
-}
+async function route() {
+  const token = ++renderToken;
+  const { path, params } = parseHash();
 
-function splitInterests(value) {
-  return value
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
-function validatePayload(payload) {
-  if (!payload.destination || payload.destination.length < 2) {
-    return "Enter an Indian destination.";
-  }
-
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(payload.startDate) || !/^\d{4}-\d{2}-\d{2}$/.test(payload.endDate)) {
-    return "Use valid start and end dates.";
-  }
-
-  if (payload.endDate < payload.startDate) {
-    return "End date must be on or after start date.";
-  }
-
-  if (!Number.isFinite(payload.budgetInr) || payload.budgetInr <= 0) {
-    return "Enter a budget greater than zero.";
-  }
-
-  if (payload.interests.length === 0) {
-    return "Add at least one interest.";
-  }
-
-  if (!Number.isFinite(payload.travelers) || payload.travelers < 1) {
-    return "Travelers must be at least 1.";
-  }
-
-  return null;
-}
-
-function renderRoutePreview(data) {
-  const trip = data.itinerary;
-  mapDestinationTitle.textContent = `${trip.destination} route preview`;
-  mapDestinationSummary.textContent = `${trip.days.length} day trip · ${trip.summary}`;
-
-  mapRouteList.innerHTML = trip.days
-    .map(
-      (day) => `
-        <div class="route-card">
-          <div class="route-card-head">
-            <strong>Day ${escapeHtml(day.dayNumber)}</strong>
-            <span>${escapeHtml(day.weather.condition)}</span>
-          </div>
-          <p>${escapeHtml(day.theme)}</p>
-          <div class="route-stops">
-            ${day.activities
-              .map(
-                (activity) => {
-                  const placeLabel = activity.location?.name ? ` · ${escapeHtml(activity.location.name)}` : "";
-                  return `<span>${escapeHtml(activity.time)} · ${escapeHtml(activity.title)}${placeLabel}</span>`;
-                },
-              )
-              .join("")}
-          </div>
-        </div>
-      `,
-    )
-    .join("");
-}
-
-function renderItinerary(data) {
-  const trip = data.itinerary;
-  renderRoutePreview(data);
-  itinerary.classList.remove("empty-state");
-  itinerary.innerHTML = `
-    <div class="itinerary-stack">
-      <header class="itinerary-summary">
-        <div>
-          <h2>${escapeHtml(trip.tripTitle)}</h2>
-          <p>${escapeHtml(trip.summary)}</p>
-        </div>
-        <div class="budget-pill">₹${escapeHtml(rupeeFormatter.format(trip.budgetEstimateInr))} budget</div>
-      </header>
-      ${trip.days
-        .map(
-          (day) => `
-            <article class="day-card">
-              <div class="day-card-head">
-                <div>
-                  <span>Day ${escapeHtml(day.dayNumber)}</span>
-                  <h3>${escapeHtml(day.theme)}</h3>
-                </div>
-                <div class="weather-pill">${escapeHtml(day.weather.condition)} · ${escapeHtml(day.weather.tempHighC)}° / ${escapeHtml(day.weather.tempLowC)}°</div>
-              </div>
-              <div class="activity-list">
-                ${day.activities
-                  .map(
-                    (activity) => `
-                      <div class="activity-row">
-                        <div class="activity-time">${escapeHtml(activity.time)}</div>
-                        <div class="activity-body">
-                          <strong>${escapeHtml(activity.title)}</strong>
-                          <span>${escapeHtml(activity.category)}</span>
-                          ${activity.notes ? `<p>${escapeHtml(activity.notes)}</p>` : ""}
-                        </div>
-                        <div class="activity-cost">₹${escapeHtml(rupeeFormatter.format(activity.estCostInr))}</div>
-                      </div>
-                    `,
-                  )
-                  .join("")}
-              </div>
-            </article>
-          `,
-        )
-        .join("")}
-    </div>
-  `;
-}
-
-form.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  showError("");
-
-  const formData = new FormData(form);
-  const payload = {
-    destination: String(formData.get("destination") ?? "").trim(),
-    startDate: String(formData.get("startDate") ?? "").trim(),
-    endDate: String(formData.get("endDate") ?? "").trim(),
-    budgetInr: Number(formData.get("budgetInr") ?? 0),
-    interests: splitInterests(String(formData.get("interests") ?? "")),
-    pace: String(formData.get("pace") ?? "balanced"),
-    travelers: Number(formData.get("travelers") ?? 1),
-    notes: String(formData.get("notes") ?? "").trim(),
-  };
-
-  const validationError = validatePayload(payload);
-  if (validationError) {
-    showError(validationError);
+  // In-page section anchors such as #season are handled by the browser.
+  if (!path.startsWith("/")) {
+    document.getElementById(path)?.scrollIntoView({ behavior: "smooth", block: "start" });
     return;
   }
 
-  submitButton.disabled = true;
-  submitButton.textContent = "Generating trip...";
+  cleanup?.();
+  cleanup = null;
+
+  const match = routes.map((entry) => ({ entry, result: path.match(entry.pattern) })).find(({ result }) => result);
+  document.querySelectorAll("[data-nav]").forEach((link) => link.classList.toggle("active", link.dataset.nav === match?.entry.nav));
+
+  // Each view gets a fresh root so listeners never accumulate across navigations.
+  const root = document.createElement("div");
+  root.className = "view-root";
+  viewHost.replaceChildren(root);
+  window.scrollTo({ top: 0 });
+
+  if (!match) {
+    root.innerHTML = `<div class="empty-state"><h3>Page not found</h3><a class="primary-cta-button compact" href="#/">Go home</a></div>`;
+    return;
+  }
 
   try {
-    const response = await fetch("/api/itineraries/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data?.message ?? "Failed to generate itinerary.");
-    }
-
-    renderItinerary(data);
+    const result = await match.entry.render(root, match.result, params);
+    if (token === renderToken) cleanup = typeof result === "function" ? result : null;
+    else if (typeof result === "function") result();
   } catch (error) {
-    showError(error instanceof Error ? error.message : "Something went wrong.");
-  } finally {
-    submitButton.disabled = false;
-    submitButton.textContent = "Generate itinerary";
+    console.error(error);
+    root.innerHTML = `<div class="empty-state"><h3>Something went wrong</h3><p>${escapeHtml(error.message)}</p></div>`;
   }
+}
+
+function renderAccountArea() {
+  const host = document.getElementById("account-area");
+  if (state.user) {
+    host.innerHTML = `
+      <details class="user-menu">
+        <summary><span class="avatar" aria-hidden="true">${escapeHtml(state.user.name.charAt(0).toUpperCase())}</span><span class="user-name">${escapeHtml(state.user.name.split(" ")[0])}</span></summary>
+        <div class="user-menu-panel">
+          <span class="muted small">${escapeHtml(state.user.email)}</span>
+          <a href="#/trips">My trips</a>
+          <button type="button" id="logout-btn">Log out</button>
+        </div>
+      </details>`;
+    host.querySelector("#logout-btn").addEventListener("click", async () => {
+      await logout();
+      toast("You're logged out", "info");
+      if (location.hash.startsWith("#/trip")) location.hash = "#/";
+      else route();
+    });
+  } else {
+    host.innerHTML = `
+      <button type="button" class="nav-link-btn ghost" data-auth="login">Log in</button>
+      <button type="button" class="nav-link-btn" data-auth="signup">Sign up</button>`;
+    host.querySelectorAll("[data-auth]").forEach((button) => button.addEventListener("click", () => openAuthModal(button.dataset.auth)));
+  }
+}
+
+let lastUserId;
+onStateChange(() => {
+  renderAccountArea();
+  const userId = state.user?.id ?? null;
+  // Re-render user-dependent pages when someone logs in or out.
+  if (lastUserId !== undefined && userId !== lastUserId) route();
+  lastUserId = userId;
 });
 
-mapDestinationTitle.textContent = "Goa route preview";
-mapDestinationSummary.textContent = "Generate an itinerary to see the route summary here.";
+// Same-page section links (e.g. href="#costs") scroll without touching the route.
+document.addEventListener("click", (event) => {
+  const link = event.target.closest('a[href^="#"]');
+  const href = link?.getAttribute("href") ?? "";
+  if (!link || href.startsWith("#/") || href === "#") return;
+  const target = document.getElementById(href.slice(1));
+  if (!target) return;
+  event.preventDefault();
+  target.scrollIntoView({ behavior: "smooth", block: "start" });
+});
+
+window.addEventListener("hashchange", route);
+initAuthModal();
+renderAccountArea();
+await bootstrap();
+lastUserId = state.user?.id ?? null;
+route();

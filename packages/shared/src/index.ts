@@ -1,2 +1,21 @@
 export * from "./itinerary.js";
-
+export {
+  signupRequestSchema,
+  loginRequestSchema,
+  googleLoginRequestSchema,
+  publicUserSchema,
+  authResponseSchema,
+  saveTripRequestSchema,
+  updateTripRequestSchema,
+  tripStatusSchema,
+  savedTripSummarySchema,
+  savedTripSchema,
+  type SignupRequest,
+  type LoginRequest,
+  type PublicUser,
+  type SaveTripRequest,
+  type UpdateTripRequest,
+  type TripStatus,
+  type SavedTripSummary,
+  type SavedTrip,
+} from "./account.js";
