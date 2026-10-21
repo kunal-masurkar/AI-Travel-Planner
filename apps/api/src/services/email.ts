@@ -52,12 +52,22 @@ export async function sendEmail({
   }
 }
 
+function getAppUrl(): string {
+  if (process.env.APP_URL?.trim()) return process.env.APP_URL.trim();
+  if (process.env.RENDER_EXTERNAL_URL?.trim()) {
+    const ext = process.env.RENDER_EXTERNAL_URL.trim();
+    return ext.startsWith("http") ? ext : `https://${ext}`;
+  }
+  return "https://ai-travel-planner-6es8.onrender.com";
+}
+
 /**
  * Sends a welcome email to newly registered users.
  */
 export async function sendWelcomeEmail(to: string, name?: string) {
   const displayName = name?.trim() || "Traveler";
-  return sendEmail({
+  const appUrl = getAppUrl();
+  const result = await sendEmail({
     to,
     subject: "Welcome to India Travel Planner! ✈️",
     html: `
@@ -67,7 +77,7 @@ export async function sendWelcomeEmail(to: string, name?: string) {
           Thank you for joining India Travel Planner. You can now craft personalized, multi-day itineraries, discover heritage sites, optimize your routes, and save all your journeys in one place.
         </p>
         <div style="margin: 32px 0;">
-          <a href="http://localhost:5173" style="background: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; display: inline-block;">
+          <a href="${appUrl}" style="background: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; display: inline-block;">
             Start Planning Your Trip
           </a>
         </div>
@@ -78,6 +88,13 @@ export async function sendWelcomeEmail(to: string, name?: string) {
       </div>
     `,
   });
+
+  if (result.success) {
+    console.log(`[Email] Welcome email sent successfully to ${to} (id: ${result.id})`);
+  } else {
+    console.warn(`[Email] Welcome email not delivered to ${to}: ${result.error}`);
+  }
+  return result;
 }
 
 /**
