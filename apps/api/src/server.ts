@@ -1,3 +1,6 @@
+import { existsSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import cors from "cors";
 import dotenv from "dotenv";
 import express, { type NextFunction, type Request, type Response } from "express";
@@ -22,7 +25,7 @@ if (runtimeEnv.warnings.length > 0) {
   }
 }
 
-app.set("trust proxy", "loopback");
+app.set("trust proxy", 1);
 app.use(cors());
 app.use(express.json({ limit: "2mb" }));
 
@@ -48,6 +51,23 @@ app.use("/api/auth", authRouter);
 app.use("/api/destinations", destinationsRouter);
 app.use("/api/itineraries", itinerariesRouter);
 app.use("/api/trips", tripsRouter);
+
+// Static web serving for unified single-port production (Render, Docker, etc.)
+const candidateWebDirs = [
+  resolve(process.cwd(), "apps/web"),
+  resolve(dirname(fileURLToPath(import.meta.url)), "../../../apps/web"),
+];
+const webDir = candidateWebDirs.find((dir) => existsSync(dir));
+
+if (webDir) {
+  app.use(express.static(webDir));
+  app.get("*", (request, response, next) => {
+    if (request.path.startsWith("/api") || request.path === "/health") {
+      return next();
+    }
+    response.sendFile(resolve(webDir, "index.html"));
+  });
+}
 
 app.use("/api", (_request, response) => {
   response.status(404).json({ message: "Not found." });

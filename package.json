@@ -9,9 +9,12 @@
   "scripts": {
     "dev": "npm run build --workspace @ai-travel-planner/shared && npm run build --workspace @ai-travel-planner/api && concurrently -k \"node apps/api/dist/server.js\" \"node scripts/serve-web-source.mjs\"",
     "build": "npm run build --workspace @ai-travel-planner/shared && npm run build --workspace @ai-travel-planner/api",
-    "start": "concurrently -k \"node apps/api/dist/server.js\" \"node scripts/serve-web-source.mjs\"",
+    "start": "node apps/api/dist/server.js",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "clean": "npm run clean --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   },
   "devDependencies": {
     "concurrently": "^9.0.1",
